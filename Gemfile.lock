@@ -1,0 +1,27 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    coderay (1.1.0)
+    dbf (2.0.7)
+      fastercsv (~> 1.5.4)
+    fastercsv (1.5.5)
+    method_source (0.8.2)
+    proj4rb (0.4.3)
+    pry (0.9.12.6)
+      coderay (~> 1.0)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    rgeo (0.3.20)
+    rgeo-shapefile (0.2.3)
+      dbf (>= 1.7.0)
+      rgeo (>= 0.3.3)
+    slop (3.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  proj4rb
+  pry
+  rgeo
+  rgeo-shapefile
