@@ -1,5 +1,6 @@
 require 'rgeo/shapefile'
 require 'pry'
+require 'json'
 
 epgs_32161_proj4 = "+proj=lcc +lat_1=18.43333333333333 +lat_2=18.03333333333333 +lat_0=17.83333333333333 +lon_0=-66.43333333333334 +x_0=200000 +y_0=200000 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
 epgs_32161_ogcwkt = <<WKT
@@ -27,18 +28,23 @@ epgs_32161_factory = RGeo::Cartesian.factory(:srid => 32161,
                                                         :proj4 => epgs_32161_proj4, 
                                                         :coord_sys => epgs_32161_ogcwkt)
 
+ewkt_generator = RGeo::WKRep::WKTGenerator.new({tag_format: :ewkt, emit_ewkt_srid: true})
+
 RGeo::Shapefile::Reader.open('INFRAS_ELECTRICA_PLANTAS_GENERATRICES.shp') do |file|
   puts "File contains #{file.num_records} records."
+  features = []
   file.each do |record|
     puts "Record number #{record.index}:"
-    puts "  Attributes: #{record.attributes.inspect}"
 
     local_record = epgs_32161_factory.parse_wkt(record.geometry.as_text)
-    puts "  Geometry: #{record.geometry.as_text}"
-    puts "  Lat Lon: #{RGeo::Feature.cast(local_record,
-      :factory => wgs84_factory, :project => true)}"
+
+    projected_point = RGeo::Feature.cast(local_record, 
+                                         :factory => wgs84_factory, :project => true);
+    attributes = Hash.new(record.attributes)
+    attributes["epgs_32161"] = { latitude: local_record.y, longitude: local_record.x}
+    attributes["wgs84"] = { latitude: projected_point.latitude, longitude: projected_point.longitude}
+    attributes["ewkt"] = ewkt_generator.generate(local_record)
+    features.push(attributes)
   end
-  file.rewind
-  record = file.next
-  puts "First record geometry was: #{record.geometry.as_text}"
+  puts JSON.dump(features)
 end
